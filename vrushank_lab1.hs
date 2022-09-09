@@ -22,7 +22,22 @@ msort xs = merge (msort ys) (msort zs)
 isSorted :: Ord a => [a] -> Bool
 isSorted [] = True
 isSorted [x] = True
-isSorted (x:xs:ys) = if x<=xs
-                  then isSorted (xs:ys)
+isSorted (x:xs) = if x <= head xs
+                  then isSorted xs
                   else False
 
+
+getLines :: IO [String]
+getLines = do
+           x <- getLine
+           if x == ""
+              then return []
+              else do
+                   xs <- getLines
+                   return (x:xs)
+
+main :: IO()
+main = do
+       putStrLn "Enter an empty line to exit input"
+       line <- getLines
+       mapM_ print $ (msort line)
