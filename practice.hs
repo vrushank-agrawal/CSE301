@@ -32,14 +32,15 @@ reverseList (x:xs) = reverseList xs ++ [x]
 --isPalin [] = True
 --isPalin [a] = True
 --isPalin (x:xs) = if x == myLast xs
---                 then isPalin . (init xs)
+--                 then isPalin init xs
 --                 else False
 
 --Flatten a list
---flatten :: [a] -> [a]
---flatten [elem a] = [a]
---flatten [] = []
---flatten (x:xs) = flatten x ++ flatten xs
+data NestedList a = Elem a | List [NestedList a]
+flatten :: NestedList a -> [a]
+flatten (Elem a) = [a]
+flatten (List []) = []
+flatten (List (x:xs)) = flatten x ++ flatten (List xs)
 
 --compress a string with repeated characters
 compress :: [Char] -> [Char]
@@ -49,10 +50,17 @@ compress (x:xs@(y:_))
       | otherwise   = x : compress xs
 
 --pack similar elements of a list together
-pack :: [a] -> [a]
-pack [] = []
-pack (x:xs@(y:ys))
-      | x == y      = pack [[x]++[y]] ++ pack [ys]
-      | otherwise   = pack [x] ++ pack [xs]
+--pack :: [Char] -> [Char]
+--pack [] = []
+--pack (x:xs@(y:ys))
+--      | x == y      = pack [x:' ':y:[]] ++ pack ys
+--      | otherwise   = pack [x] ++ pack xs
 
+----Encode
+--encode :: Eq a => [a] -> [(Int, a)] -> [(Int, a)]
+--encode [] xs = xs
+--encode (x:xs) [] = encode xs [(1, x)]
+--encode (x:xs) [(a, b)]
+--      | x == b      = encode xs [(a+1, b)]
+--      | otherwise   = [(a, b)] ++ encode xs []
 
