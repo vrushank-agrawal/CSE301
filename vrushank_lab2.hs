@@ -1,3 +1,5 @@
+import Data.Maybe
+
 --- Proving exercises (from Lecture 1 notes)
 
 -- Exercise 3.1
@@ -142,11 +144,22 @@ checkSpec (HasCup i a) t  = not (isAllergenPresent [a] (t !! i)) -- We have not 
 -- Exercise 2b (optional)
 checkSpec' :: Spec -> Tin -> Maybe Bool
 checkSpec' _ []            = Just True
-checkSpec' (And x y) t     = Just ((checkSpec x t) && (checkSpec y t))
-checkSpec' (Or x y) t      = Just ((checkSpec x t) || (checkSpec y t))
-checkSpec' (Not x) t       = Just (not (checkSpec x t))
+checkSpec' (And x y) t
+      | (isNothing checkx) || (isNothing checky) = Nothing
+      | otherwise       = Just (fromJust checkx && fromJust checky)
+      where checkx = checkSpec' x t
+            checky = checkSpec' y t
+checkSpec' (Or x y) t
+      | (isNothing checkx) || (isNothing checky) = Nothing
+      | otherwise       = Just (fromJust checkx || fromJust checky)
+      where checkx = checkSpec' x t
+            checky = checkSpec' y t
+checkSpec' (Not x) t
+      | isNothing check = Nothing
+      | otherwise       = Just (not (fromJust check))
+      where check = checkSpec' x t
 checkSpec' (HasCup i a) t
-      | i `elem` [0..((length t)-1)]  = Just (not (isAllergenPresent [a] (t !! i)))
+      | i < length t    = Just (not (isAllergenPresent [a] (t !! i)))
       | otherwise       = Nothing
 
 ------------------------------------------------------------
@@ -194,12 +207,23 @@ linearSort a   = auxLSort a [] []
 
 -- Exercise 5a (optional)
 counterexample :: [Int]
-counterexample = undefined
+counterexample = [2,3,1]
 
 data Bin = L | B Bin Bin  deriving (Show,Eq)
 
+--mergeBin :: B -> [Int] -> [Int] -> [Int]
+--mergeBin B [] [] = [B]
+--mergeBin B xs [] = mergeBin B [] xs
+--mergeBin B [] (x:xs)
+--      | B <= x   = B:x:xs
+--      | otherwise=
+
 -- Exercise 5b (optional)
 fromBin :: Bin -> [Int]
-fromBin = undefined
+fromBin [] = undefined
+--fromBin L  = [L]
+--fromBin (B Bin Bin) = mergeBin (B fromBin(Bin) fromBin(Bin))
+
+
 toBin :: [Int] -> Maybe Bin
 toBin = undefined
