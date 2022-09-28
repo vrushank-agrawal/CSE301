@@ -34,13 +34,12 @@ snd = \p.p (\x.\y.y)
 
 -- Exercise 1c
 {-
-swap = \x. pair (snd x) (fst x)
-swap =
+swap = \p.p (\x.\y.pair y x)
 -}
 
 -- Exercise 1d
 {-
-swapIf =
+swapIf = 
 -}
 
 -- Exercise 1e (optional)
@@ -86,6 +85,8 @@ fn3 :: ([a] -> b) -> a -> b
 fn3 f a = f [a]
 fn4 :: ((a -> a) -> b) -> b
 fn4 f = fn5
+fn5 :: (a -> a) -> b
+
 
 -- Exercise 2c (optional)
 {-
