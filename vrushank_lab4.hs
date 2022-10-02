@@ -34,12 +34,12 @@ snd = \p.p (\x.\y.y)
 
 -- Exercise 1c
 {-
-swap = \p.p (\x.\y.pair y x)
+swap = \p.p (\x.\y.\f. f y x)
 -}
 
 -- Exercise 1d
 {-
-swapIf = 
+swapIf = \b.\p. p (\x.\y.\f. ((b (f y x)) (f x y)))
 -}
 
 -- Exercise 1e (optional)
@@ -49,7 +49,7 @@ fib = <your definition here>
 
 -- Exercise 1e (optional)
 {-
-pred = <your definition here>
+pred = \n.\f.\x. n (\g.\h. h (g f)) (\u.x) (\u.u)
 -}
 
 -- Curry's and Turing's fixed point operators
@@ -84,8 +84,9 @@ fn2 a b f = (a, b, (f a b))
 fn3 :: ([a] -> b) -> a -> b
 fn3 f a = f [a]
 fn4 :: ((a -> a) -> b) -> b
-fn4 f = fn5
-fn5 :: (a -> a) -> b
+fn4 f = f fn5
+fn5 :: a -> a
+fn5 a = a
 
 
 -- Exercise 2c (optional)
@@ -113,10 +114,17 @@ oneid = A (Ann (L 0 $ L 1 $ A (V 0) (V 1)) (Fn (Fn (TV 0) (TV 0)) (Fn (TV 0) (TV
 
 type TyCxt = [(Int,Ty)]
 
-check :: TyCxt -> Expr -> Ty -> Bool
-synth :: TyCxt -> Expr -> Maybe Ty
 
 -- Exercise 3
+check :: TyCxt -> Expr -> Ty -> Bool
 check = undefined
-synth = undefined
+--check cxt expr ty = do
+--        (ty', cxt') <- synth cxt expr
+----        cxt'' ->
+--        return cxt'
+
+synth :: TyCxt -> Expr -> Maybe Ty
+synth cxt expr@(V _) = Nothing              -- first case
+--synth expr@(A e1 e2) = synth
+
 
