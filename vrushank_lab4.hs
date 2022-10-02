@@ -116,15 +116,31 @@ type TyCxt = [(Int,Ty)]
 
 
 -- Exercise 3
+getType :: TyCxt -> Int -> Maybe Ty
+getType [] _ = Nothing
+getType (x:xs) y = if (fst x) == y
+                   then Just (snd x)
+                   else getType xs y
+
 check :: TyCxt -> Expr -> Ty -> Bool
-check = undefined
---check cxt expr ty = do
---        (ty', cxt') <- synth cxt expr
-----        cxt'' ->
---        return cxt'
+check cxt expr t = case expr of
+                   L x expr1 -> case t of
+                                Fn t' t'' -> check ((x, t'):cxt) expr1 t''
+                                otherwise -> False
+                   otherwise -> case synth cxt expr of
+                                Nothing -> False
+                                Just x -> x == t
 
 synth :: TyCxt -> Expr -> Maybe Ty
-synth cxt expr@(V _) = Nothing              -- first case
---synth expr@(A e1 e2) = synth
-
+synth cxt expr = case expr of
+                 Ann expr1 t1 -> case (check cxt expr1 t1) of
+                                 True -> Just t1
+                                 False -> Nothing
+                 V x -> getType cxt x
+                 A expr1 expr2 -> case synth cxt expr1 of
+                                  Just (Fn t1 t2) -> if check cxt expr2 t1
+                                                     then Just t2
+                                                     else Nothing
+                                  otherwise -> Nothing
+                 otherwise -> Nothing
 
