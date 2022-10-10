@@ -37,7 +37,12 @@ evalSafeMF (Div expr1 expr2) = do
     if x2 /= 0 then return (x1 / x2) else fail "Can't divide by zero"
 
 
-{- different outputs of evalSafeMF ... -}
+{- different outputs of evalSafeMF
+    evalSafeMF e1 = -2.5
+    evalSafeMF e2 = 0.0
+    evalSafeMF e3 = error
+    evalSafeMF e2 :: Maybe Double = Nothing
+-}
 
 evalWeird :: Expr -> StateT Int Maybe Double
 evalWeird (Con c)    =
@@ -58,20 +63,19 @@ evalWeirdTop e = runStateT (evalWeird e) 0 >>= \(x,s) -> return x
 evalWeird' :: MonadFail m => Expr -> StateT Int m Double
 evalWeird' (Con c) = do
     n <- get
-    _ <- put(n+1)
-    return (if n `mod` 3 == 2 then 0 else c)
+    put (n+1)
+    return (if n `mod` 3 == 0 then 0 else c)
 evalWeird' (Sub e1 e2) = do
-    x1 <- evalWeird' e1
     x2 <- evalWeird' e2
+    x1 <- evalWeird' e1
     return (x1 - x2)
-evalWeird' (Div expr1 expr2) = do
-    x1 <- evalWeird' e1
+evalWeird' (Div e1 e2) = do
     x2 <- evalWeird' e2
-    if x2 /= 0 then return (x1 / x2) else lift (fail "Can't divide by 0")
+    x1 <- evalWeird' e1
+    if x2 == 0 then lift (fail "Division by zero") else return (x1 / x2)
 
 evalWeirdTop' :: MonadFail m => Expr -> m Double
-evalWeirdTop' e = runStateT (evalWeird' e) 0 >>= \(x,s) -> return x
-
+evalWeirdTop' e = runStateT (evalWeird' e) 1 >>= \(x, s) -> return x
 
 --________________________________________________________
 --________________________________________________________
@@ -88,22 +92,56 @@ instance Functor Bin where
 
 -- Exercise 2a
 {-
-    Here the functor mapBin is a morphism for the Category Bin
-    which can be represented as mapBin: Bin -> Bin
-                    or
-    in other words, if x \in Bin then we can represent the
-    functor as mapBin: x -> Bin(x)
     For id func we have:
-        mapBin id t = t
 
+        Case 1: L a
+            mapBin id (L a) = L (id a) = L a
+            Essentially, for the L case the result is straightforward.
+
+        Case 2: B l r
+            Let us now use induction and assume that:
+                mapBin id B' = id B' where B' is a subtree
+                of the tree B or the tree B' is smaller than B.
+            The base case is trivial as a direct consequence from above
+
+            mapBin id B = B (mapBin id B'') (mapBin id B')
+                        = B (id B'') (id B')
+                        = B
+                        = id B
+
+        Hence, for the binary tree B, through induction, we realize that the
+        identity law `mapBin id t = t a` holds.
+
+    For composition we have:
+        Case 1: L a
+            mapBin (f . g) (L a) = L ((f . g) a)
+                                 = L c
+                                 = mapBin f (L b)
+                                 = mapBin f (mapBin g (L a))
+            The conclusion is straightforward.
+
+        Case 2: B l r
+            Let us now use induction and assume that:
+                mapBin (f . g) B' = mapBin f (mapBin g B')
+                where B' is a subtree of the tree B' or is smaller than B.
+            The base case is trivial as a direct consequence from above
+
+            mapBin (f . g) B = B (mapBin (f . g) B'') (mapBin (f . g) B')
+                             = B (mapBin f (mapBin g B'')) (mapBin f (mapBin g B'))
+                             = mapBin f (B (mapBin g B'') (mapBin g B'))
+                             = mapBin f (mapBin g B)
+
+        Hence, for the binary tree B, through induction, we realize that the
+        composition law `mapBin (f . g) B = mapBin f (mapBin g B)` holds.
+
+    Therefore, we have proved Bin is a functor by proving the functor laws.
 -}
 
 -- Exercise 2b
 instance Monad Bin where
   return = L
-  (>>=) = undefined
---  L a >>= f = f a
---  B a b >>= f = B (f a) (f b)
+  L a   >>= f = f a
+  B l r >>= f = B (l >>= f) (r >>= f)
 
 instance Applicative Bin where
   pure = return
@@ -172,18 +210,21 @@ coin = select [True, False]
 subset :: SelectMonad m => [a] -> m [a]
 subset []     = return []
 subset (x:xs) = do
-  c <- coin
-  ys <- subset xs
-  if c then return (x:ys)
-  else return ys
+      true <- coin
+      ys <- subset xs
+      if true
+      then return (x:ys)
+      else return ys
 
 -- Exercise 3c
 simulate :: Monad m => Int -> m Bool -> m Int
-simulate 0 b = return 0
-simulate n b = do
-  k <- simulate (n-1) b
-  b' <- b
-  if b' then return (k+1) else return k
+simulate 0 _ = return 0
+simulate n tru = do
+      k <- simulate (n-1) tru
+      tru' <- tru
+      if tru'
+      then return (k+1)
+      else return k
 
 -- Exercise 3d (optional)
 genTree :: SelectMonad m => [a] -> m (Bin a)
