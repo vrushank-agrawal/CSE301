@@ -56,17 +56,45 @@ alphaDom_vs_RanDom =
           free = [(-4,-3),(-4,0),(-2,-4),(-2,-2),(-1,-4),(-1,-2),(-1,2),(-1,4),(0,-4),(0,-2),(0,2),(0,4),(1,-4),(1,-2),(1,2),(1,4),(2,-4),(2,-2),(2,4),(3,-4),(4,0),(4,3)],
           hist = [(-3,4),(2,-1),(-3,2),(4,-2),(-4,-4),(-4,3),(3,4),(2,1),(-3,1),(3,1),(-4,-1),(-2,-1),(-2,3),(-4,1),(1,3),(4,-4),(-4,-2),(4,1),(1,-3),(3,-2),(-2,-3)] }
 
+
+---------------------------------------------------------------------------------------------
+-- Exercise 1
+---------------------------------------------------------------------------------------------
+
 -- Exercise 1a
+--  returns the list of all legal moves for a player on a given board.
+--  Note that here we mean the legal moves for either player, regardless
+--  of whether it is that player's turn to play.
+
 legalMoves :: Player -> Board -> [Cell]
-legalMoves = undefined
+legalMoves p b = foldr (\c cs -> (if adjCell c p `elem` (free b) then [c] else []) ++ cs) [] (free b)
 
 -- Exercise 1b
+--  takes a board and a legal move for the player whose turn it is to play,
+--  and returns the new board resulting from executing that play. If the move
+--  is actually illegal for the current player, then the behavior of moveLegal is unspecified
+
+delElem :: [Cell] -> [Cell] -> Cell -> Cell -> [Cell]
+delElem xs [] _ _ = xs
+delElem cs (x:xs) c1 c2 | x == c1     = delElem cs xs c1 c2
+                        | x == c2     = delElem cs xs c1 c2
+                        | otherwise   = delElem (cs++[x]) xs c1 c2
+
 moveLegal :: Board -> Cell -> Board
-moveLegal = undefined
+moveLegal b c = Board (opp (turn b)) (delElem [] (free b) c (adjCell c (turn b))) (c:(hist b))
 
 -- Exercise 1c
+
+prevState :: Board -> Cell -> Board
+prevState b c = Board (opp (turn b)) (c:(free b)) (tail (hist b))
+
 replay :: Board -> [Board]
-replay = undefined
+replay b = foldr (\hc hcs -> (if null hcs then [] else [prevState b hc]) ++ hcs) [b] ((hist b))
+
+
+---------------------------------------------------------------------------------------------
+-- Exercise 2
+---------------------------------------------------------------------------------------------
 
 gametree :: Board -> Tree Board
 gametree b = Node b [gametree (moveLegal b c) | c <- legalMoves (turn b) b]
@@ -86,6 +114,11 @@ minimax = undefined
 -- Exercise 2c
 bestmoves :: Int -> (Board -> Score) -> Board -> [Cell]
 bestmoves = undefined
+
+
+---------------------------------------------------------------------------------------------
+-- Exercise 3
+---------------------------------------------------------------------------------------------
 
 selectSafe :: SelectMonad m => [a] -> m (Maybe a)
 selectSafe [] = return Nothing
