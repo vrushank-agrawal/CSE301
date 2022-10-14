@@ -12,7 +12,7 @@ import Data.Tree
 import System.Random
 
 import Types
--- import DomViz
+--import DomViz
 {- Uncomment the previous line if you want to use the visualization routines. -}
 
 board4x4_3 = Board { turn = H,
@@ -89,7 +89,7 @@ prevState :: Board -> Cell -> Board
 prevState b c = Board (opp (turn b)) (c:(free b)) (tail (hist b))
 
 replay :: Board -> [Board]
-replay b = foldr (\hc hcs -> (if null hcs then [] else [prevState b hc]) ++ hcs) [b] ((hist b))
+replay b = foldr (\hc hcs -> (if null hcs then [] else [prevState (head hcs) hc]) ++ hcs) [b] (hist b)
 
 
 ---------------------------------------------------------------------------------------------
@@ -104,12 +104,36 @@ prune 0 (Node x _)  = Node x []
 prune n (Node x ts) = Node x [prune (n-1) t | t <- ts]
 
 -- Exercise 2a
+--  Implement the following heuristic: if it is p's turn to play, return a win for p's
+--  opponent if p has no legal moves, and otherwise return a heuristic value based on the formula
+--  #(legal moves for V) - #(legal moves for H) - sign(p)
+--  where sign(H) = -1 and sign(V) = 1.
+
+legalMovesNum :: [Cell] -> Int
+legalMovesNum [] = 0
+legalMovesNum (x:xs) = 1 + legalMovesNum xs
+
+heuristic :: Player -> Int -> Int -> Score
+heuristic V mV mH = Heu (mV - mH - 1)
+heuristic H mV mH = Heu (mV - mH + 1)
+
 score :: Board -> Score
-score = undefined
+score b | currentPlayerMoves == 0 = Win (opp (turn b))
+        | otherwise               = heuristic (turn b) legalV legalH
+        where legalH = legalMovesNum (legalMoves H b)
+              legalV = legalMovesNum (legalMoves V b)
+              currentPlayerMoves = legalMovesNum (legalMoves (turn b) b)
 
 -- Exercise 2b
+--  Annotate every node of a game tree with a minimax score, computed relative
+--  to an arbitrary scoring function for the leaves. It should leave the tree
+--  untouched other than annotating each node with a score: in other words, it
+--  should satisfy that fmap fst (minimax sfn t) = t where the operation
+--  fmap :: (a -> b) -> Tree a -> Tree b is defined in the Functor instance of Tree.
+
+
 minimax :: (Board -> Score) -> Tree Board -> Tree (Board, Score)
-minimax = undefined
+minimax score tb = undefined
 
 -- Exercise 2c
 bestmoves :: Int -> (Board -> Score) -> Board -> [Cell]
