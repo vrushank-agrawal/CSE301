@@ -131,14 +131,39 @@ score b | currentPlayerMoves == 0 = Win (opp (turn b))
 --  should satisfy that fmap fst (minimax sfn t) = t where the operation
 --  fmap :: (a -> b) -> Tree a -> Tree b is defined in the Functor instance of Tree.
 
-
 minimax :: (Board -> Score) -> Tree Board -> Tree (Board, Score)
-minimax score tb = undefined
+minimax f_score (Node b []) = Node (b, f_score b) []
+minimax f_score (Node b bs) | turn b == H = Node (b, minimum scores) bs''
+                      | otherwise   = Node (b, maximum scores) bs''
+                      where bs''   = [minimax f_score x | x <- bs]
+                            scores = [s | Node (x, s) xs <- bs'']
 
 -- Exercise 2c
-bestmoves :: Int -> (Board -> Score) -> Board -> [Cell]
-bestmoves = undefined
+--  Write a function which takes a depth d and a scoring function scorefn as parameters,
+--  and defines a function from boards to lists of optimal moves. Each move returned should
+--  be optimal in the sense that it has the best minimax score for the current player
+--  relative to the scoring function scorefn applied to the game tree pruned to depth d,
+--  although it may not be the only move with the best score. The list returned by bestmoves
+--  should be the complete list of optimal moves, but they can be returned in any order.
 
+-- We append the move for the best minimax score for each level in a list
+getBestMoves :: Player -> Tree (Board, Score) -> [(Score, Int)] -> [Cell]
+getBestMoves V t s = [head (hist (fst (rootLabel (subForest t!!i))) ) | (_, i) <- filter (\x -> fst x == fst (maximum s)) s]
+getBestMoves H t s = [head (hist (fst (rootLabel (subForest t!!i))) ) | (_, i) <- filter (\x -> fst x == fst (minimum s)) s]
+
+scoreByLevel :: Forest (Board, Score) -> [(Score, Int)]
+scoreByLevel [] = []
+scoreByLevel [Node (t, s) _] = [(s,0)]
+-- increase depth of score at every step hence we map an increasing
+-- function to the second variable to the subForest
+scoreByLevel ((Node (t, s) _):ts) = (s,0) : map (\(s'',i) -> (s'', i+1)) (scoreByLevel ts)
+
+bestmoves :: Int -> (Board -> Score) -> Board -> [Cell]
+bestmoves depth f_score b
+        | turn (fst (rootLabel tree_)) == H = getBestMoves H tree_ score_level
+        | otherwise                         = getBestMoves V tree_ score_level
+        where tree_       = minimax f_score (prune depth (gametree b))
+              score_level = scoreByLevel (subForest tree_)
 
 ---------------------------------------------------------------------------------------------
 -- Exercise 3
@@ -156,7 +181,15 @@ randomPlay b = selectSafe (legalMoves (turn b) b)
 
 -- Exercise 3a
 runGame :: SelectMonad m => (Board -> m (Maybe Cell)) -> (Board -> m (Maybe Cell)) -> Board -> m Board
-runGame = undefined
+runGame playV playH b = do
+        move <- if turn b == H
+                then playH b
+                else playV b
+        case move of
+            Nothing -> return b
+            Just cell -> if cell `elem` legalMoves (turn b) b
+                         then runGame playH playV (moveLegal b cell)
+                         else return b
 
 -- Exercise 3b (optional)
 carpets :: [Board]
