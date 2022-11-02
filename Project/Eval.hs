@@ -44,11 +44,11 @@ stepBeta :: LExp -> LExp
 stepBeta expr = plug ctx (subst (t2, x) y)
   where
     redices = redex expr
-    leftmost = head redices
+    leftmost = last redices
     (ctx, e) = leftmost
     A (L x y) t2 = e
 
 normalize :: LExp -> LExp
-normalize = stepBeta
+--normalize = stepBeta
 
---normalize exp = if length (redex exp) == 0 then exp else normalize (stepBeta exp)
+normalize expr = if null (redex expr) then rename (\x -> [head x]) expr else normalize (stepBeta expr)

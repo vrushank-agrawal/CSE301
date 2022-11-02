@@ -188,7 +188,7 @@ parseVar = var >>= \x -> return (V x)
 
 -- Parse a command.
 parseCmd :: Parser Cmd
-parseCmd = parseEval <|> parseLet <|> parseNoop <|> parseQuit
+parseCmd = parseEval <|> parseLet <|> parseNoop <|> parseQuit <|> parseLoad
 
 -- Parse an eval command.
 parseEval :: Parser Cmd
@@ -222,6 +222,20 @@ parseQuit = do
   string ":quit" <|> string ":q"
   end
   return Quit
+
+-- Parse a load command
+parseLoad :: Parser Cmd
+parseLoad = do
+  string ":load" <|> string ":l"
+  spaces
+  name <- filename
+  end
+  return (Load name)
+
+filename :: Parser String
+filename = do
+  name <- list (char '\'')
+  return name
 
 readParser :: MonadFail m => Parser a -> String -> m a
 readParser p s = case runParser p s of
