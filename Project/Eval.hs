@@ -1,4 +1,4 @@
-module Eval (normalize) where
+module Eval (normalize, normalizeWithSteps) where
 
 import Expr
 import Subst
@@ -34,21 +34,25 @@ subexp t = focus t Hole
     focus (L x e) c = (c, L x e) : focus e (L' x c)
 
 redex :: LExp -> [LExpPtr]
-redex expr = [(c, e) | (c, e) <- subexp expr, isRedex e]
+redex expr = filter isRedex (subexp expr)
   where
-    isRedex :: LExp -> Bool
-    isRedex (A (L _ _) _) = True
+    isRedex :: LExpPtr -> Bool
+    isRedex (_, A (L _ _) _) = True
     isRedex _ = False
 
 stepBeta :: LExp -> LExp
-stepBeta expr = plug ctx (subst (t2, x) y)
+stepBeta expr = plug ctx (subst (d, x) y)
   where
     redices = redex expr
-    leftmost = last redices
+    leftmost = head redices
     (ctx, e) = leftmost
-    A (L x y) t2 = e
+    A (L x y) d = e
 
 normalize :: LExp -> LExp
 --normalize = stepBeta
 
-normalize expr = if null (redex expr) then rename (\x -> [head x]) expr else normalize (stepBeta expr)
+normalize expr = if null (redex expr) then expr else normalize (stepBeta expr)
+--normalize expr = if null (redex expr) then rename (\x -> [head x]) expr else normalize (stepBeta expr)
+
+normalizeWithSteps :: LExp -> [LExp]
+normalizeWithSteps expr = if null (redex expr) then [expr] else expr : normalizeWithSteps (stepBeta expr)

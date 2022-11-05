@@ -35,9 +35,10 @@ repl = go [] -- start the interpreter in an empty environment
               -- in order from left to right
               let t' = foldl (\t (x, u) -> subst (u, x) t) t env
               -- normalize the resulting term
-              let u = normalize t'
+              --let u = normalize t'
+              let u = normalizeWithSteps t'
               -- print the result
-              printLExp u
+              mapM_ (putStrLn . prettyLExp) u
               -- continue the REPL
               go env
         Let x t ->
