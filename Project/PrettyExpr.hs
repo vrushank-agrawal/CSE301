@@ -1,4 +1,4 @@
-module PrettyExpr (prettyLExp, printLExp,prettyLexpNewLine) where
+module PrettyExpr (prettyLExp, printLExp) where
 
 import Expr
 
@@ -7,9 +7,6 @@ paren s = "(" ++ s ++ ")"
 
 parenIf :: Bool -> String -> String
 parenIf b = if b then paren else id
-
-prettyLexpNewLine :: String -> String
-prettyLexpNewLine exp = exp ++ "\n"
 
 prettyLExp :: LExp -> String
 prettyLExp (V x) = x

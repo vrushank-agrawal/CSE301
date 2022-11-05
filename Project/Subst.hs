@@ -2,11 +2,6 @@ module Subst (subst) where
 
 import Expr
 
-isFree :: Var -> LExp -> Bool
-isFree v (V v') = v == v'
-isFree v (A e1 e2) = isFree v e1 || isFree v e2
-isFree v (L _ e1) = isFree v e1
-
 -- function to replace variable in LExp
 swap :: LExp -> Var -> Var -> LExp
 swap (V v) y z
@@ -31,7 +26,7 @@ subst dx (A e1 e2) = A (subst dx e1) (subst dx e2)
 -- definition for Lambda expression substitution
 subst (d, x) (L v e)
   | v == x = L v e
-  | not (isFree v d) = L v (subst (d, x) e)
+  | not (elem v (free d)) = L v (subst (d, x) e)
   | otherwise = L v' (subst (d, x) (swap e v v'))
   where
     v' = modify v

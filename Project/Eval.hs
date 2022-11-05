@@ -1,4 +1,4 @@
-module Eval (normalize, normalizeWithSteps) where
+module Eval (normalize, normAll) where
 
 import Expr
 import Subst
@@ -49,10 +49,7 @@ stepBeta expr = plug ctx (subst (d, x) y)
     A (L x y) d = e
 
 normalize :: LExp -> LExp
---normalize = stepBeta
-
 normalize expr = if null (redex expr) then expr else normalize (stepBeta expr)
---normalize expr = if null (redex expr) then rename (\x -> [head x]) expr else normalize (stepBeta expr)
 
-normalizeWithSteps :: LExp -> [LExp]
-normalizeWithSteps expr = if null (redex expr) then [expr] else expr : normalizeWithSteps (stepBeta expr)
+normAll :: LExp -> [LExp]
+normAll expr = if null (redex expr) then [expr] else expr : normAll (stepBeta expr)

@@ -1,7 +1,9 @@
 import Cmd
+import Control.Monad (when)
 import Data.List
 import Eval
 import Expr
+import Parser
 import PrettyExpr
 import Subst
 import System.IO
@@ -12,6 +14,29 @@ type Env = [(Var, LExp)]
 -- undefinedVar determines whether an expression has any free variable that is not defined by the environment
 undefinedVar :: Env -> LExp -> Maybe Var
 undefinedVar env t = find (\y -> lookup y env == Nothing) (free t)
+
+-- getKey :: IO [Char]
+-- getKey = reverse <$> getKey' ""
+--   where getKey' chars = do
+--           char <- getChar
+--           more <- hReady stdin
+--           (if more then getKey' else return) (char:chars)
+
+-- -- Simple menu controller
+-- main = do
+--   hSetBuffering stdin NoBuffering
+--   hSetEcho stdin False
+--   key <- getKey
+--   when (key /= "\ESC") $ do
+--     case key of
+--       "\ESC[A" -> putStr "↑"
+--       "\ESC[B" -> putStr "↓"
+--       "\ESC[C" -> putStr "→"
+--       "\ESC[D" -> putStr "←"
+--       "\n"     -> putStr "⎆"
+--       "\DEL"   -> putStr "⎋"
+--       _        -> return ()
+--     main
 
 -- the top-level read-eval-print-loop
 repl :: IO ()
@@ -35,10 +60,11 @@ repl = go [] -- start the interpreter in an empty environment
               -- in order from left to right
               let t' = foldl (\t (x, u) -> subst (u, x) t) t env
               -- normalize the resulting term
-              --let u = normalize t'
-              let u = normalizeWithSteps t'
+              let u = normalize t'
+              --let u = normAll t'
               -- print the result
-              mapM_ (putStrLn . prettyLExp) u
+              --mapM_ (putStrLn . prettyLExp) u
+              printLExp u
               -- continue the REPL
               go env
         Let x t ->
