@@ -51,7 +51,8 @@ stepBeta expr = plug ctx (subst (d, x) y)
 normalize :: LExp -> LExp
 --normalize = stepBeta
 
-normalize expr = if null (redex expr) then rename (\x -> [head x]) expr else normalize (stepBeta expr)
+normalize expr = if null (redex expr) then expr else normalize (stepBeta expr)
+--normalize expr = if null (redex expr) then rename (\x -> [head x]) expr else normalize (stepBeta expr)
 
 normalizeWithSteps :: LExp -> [LExp]
-normalizeWithSteps expr = if null (redex expr) then [rename (\x -> [head x]) expr] else expr : normalizeWithSteps (stepBeta expr)
+normalizeWithSteps expr = if null (redex expr) then [expr] else expr : normalizeWithSteps (stepBeta expr)
