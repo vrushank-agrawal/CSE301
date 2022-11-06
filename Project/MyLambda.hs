@@ -44,7 +44,7 @@ repl = go [] (False, "norm") -- start the interpreter in an empty environment
               let t' = foldl (\t (x, u) -> subst (u, x) t) t env
               -- normalize the resulting term
               u <- if fst flags then normAll t' $ snd flags else normalize t' $ snd flags
-              -- print the result
+              -- print the result as a lambda function
               mapM_ (putStrLn . prettyLExp) u
               -- continue the REPL
               go env flags

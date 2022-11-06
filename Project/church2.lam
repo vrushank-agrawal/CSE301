@@ -1,0 +1,5 @@
+true = \x.\y.x
+false = \x.\y.y
+not = \b.b false true
+and = \b1.\b2.b1 b2 false
+or = \b1.\b2.b1 true b2
