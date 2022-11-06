@@ -1,17 +1,20 @@
 import Cmd
-import Control.Monad (when)
-import Data.List
 import Eval
 import Expr
 import Parser
 import PrettyExpr
 import Subst
+
+import Data.List
 import System.IO
+import Control.Monad (when)
 import Control.Monad.IO.Class
+import System.Exit
 
 -- an "environment" is a list of variable names paired with their definitions as lambda-expressions
 type Env = [(Var, LExp)]
 
+-- a "flag" is a tuple of command flags paired with their setting - on or off - as a bool
 type Flags = (Bool, String)
 
 -- undefinedVar determines whether an expression has any free variable that is not defined by the environment
@@ -68,33 +71,47 @@ repl = go [] (False, "norm") -- start the interpreter in an empty environment
           action
         Load name -> do
           env <- liftIO $ (envFromFile name env) --read file and convert back from IO
-          putStrLn "Loaded!"
+          putStrLn "File loaded!"
           go env flags
-    
+
+-- Function that reads definitions from a file and stores them as env variables
 envFromFile :: FilePath -> Env -> IO Env
 envFromFile name env = do 
-                        content <- readFile name
-                        let content_lines = lines content
-                        (content_to_env content_lines env 0)
-  where
-  content_to_env :: [String] -> Env -> Int -> IO Env
-  content_to_env [] env n = return env --not an action
-  content_to_env (x: xs) env n = do 
-                            putStrLn ("line: " ++ x)
-                            res <- (readParser parseCmd x)
-                            case res of
-                              Let x t ->
-                                  -- execute a let command
-                                  case undefinedVar env t of
-                                    Just y -> do
-                                              putStrLn ("Variable not in scope: " ++ y) 
-                                              return []
-                                    Nothing -> do
-                                      -- continue the REPL in an environment extended with x=t
-                                    content_to_env xs ((x,t):env) (n+1) --add to environment
-                              otherwise -> do 
-                                            putStrLn ("Line " ++ (show n) ++ "is not a variable definition. Stopped at line before.")
-                                            return [] --stop at error
-                  
+    content <- readFile name
+    let content_lines = lines content
+    (content_to_env content_lines env 0)
+    where
+        content_to_env :: [String] -> Env -> Int -> IO Env
+        content_to_env [] env n = return env --not an action
+        content_to_env (x: xs) env n = do
+            putStrLn ("> " ++ x)
+            res <- (readParser parseCmd x)
+            case res of
+                Let x t ->
+                    -- execute a variable definition
+                    case undefinedVar env t of
+                        Just y -> do
+                          putStrLn ("Variable not in scope: " ++ y)
+                          content_to_env xs env n -- continue to next lines
+                        Nothing -> do
+                          -- continue the REPL in an environment extended with x=t
+                          content_to_env xs ((x,t):env) (n+1) --add to environment
+                Eval t -> do
+                    case undefinedVar env t of
+                        Just y -> putStrLn ("Variable not in scope: " ++ y)
+                        Nothing -> do
+                          let t' = foldl (\t (x, u) -> subst (u, x) t) t env
+                          u <- normalize t' "norm"
+                          mapM_ (putStrLn . prettyLExp) u
+                    content_to_env xs env n -- continue to next lines
+                Noop -> do
+                    content_to_env xs env n -- continue to next lines
+                Quit -> do
+                    putStrLn "Goodbye."
+                    exitSuccess
+                otherwise -> do
+                    putStrLn ("Command not recognized by file parsing")
+                    return []
+
 main :: IO ()
 main = repl

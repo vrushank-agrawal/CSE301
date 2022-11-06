@@ -57,21 +57,21 @@ picker redices s
   | s == "norm" = return (head redices)
   | s == "appl" = return (last redices)
   | s == "rand" = do
-    x <- getStdRandom $ randomR (0, length redices - 1)
-    return (redices !! x)
+        x <- getStdRandom $ randomR (0, length redices - 1)
+        return (redices !! x)
 
 normalize :: LExp -> String -> IO [LExp]
 normalize expr eval
   | null (redex expr) = return [expr]
   | otherwise = do
-    next <- stepBeta expr eval
-    rest <- normalize next eval
-    return rest
+        next <- stepBeta expr eval
+        rest <- normalize next eval
+        return rest
 
 normAll :: LExp -> String -> IO [LExp]
 normAll expr eval
   | null (redex expr) = return [expr]
   | otherwise = do
-    next <- stepBeta expr eval
-    rest <- normAll next eval
-    return $ expr : rest
+        next <- stepBeta expr eval
+        rest <- normAll next eval
+        return $ expr : rest
