@@ -2,6 +2,8 @@ module Eval (normalize, normAll) where
 
 import Expr
 import Subst
+import System.IO
+import System.Random (getStdRandom, newStdGen, random, randomR, randomRs)
 
 -- datatype of one-hole contexts for lambda expressions
 data LExpCxt = Hole | A'1 LExpCxt LExp | A'2 LExp LExpCxt | L' Var LExpCxt
@@ -40,16 +42,35 @@ redex expr = filter isRedex (subexp expr)
     isRedex (_, A (L _ _) _) = True
     isRedex _ = False
 
-stepBeta :: LExp -> LExp
-stepBeta expr = plug ctx (subst (d, x) y)
+stepBeta :: LExp -> String -> IO LExp
+stepBeta expr eval = do
+  leftmost <- picker redices eval
+  case leftmost of
+    (ctx, e) -> case e of
+      A (L x y) d -> return $ plug ctx (subst (d, x) y)
   where
     redices = redex expr
-    leftmost = head redices
-    (ctx, e) = leftmost
-    A (L x y) d = e
 
-normalize :: LExp -> LExp
-normalize expr = if null (redex expr) then expr else normalize (stepBeta expr)
+picker :: [LExpPtr] -> String -> IO LExpPtr
+picker redices s
+  | s == "norm" = return (head redices)
+  | s == "appl" = return (last redices)
+  | s == "rand" = do
+    x <- getStdRandom $ randomR (0, length redices - 1)
+    return (redices !! x)
 
-normAll :: LExp -> [LExp]
-normAll expr = if null (redex expr) then [expr] else expr : normAll (stepBeta expr)
+normalize :: LExp -> String -> IO [LExp]
+normalize expr eval
+  | null (redex expr) = return [expr]
+  | otherwise = do
+    next <- stepBeta expr eval
+    rest <- normalize next eval
+    return rest
+
+normAll :: LExp -> String -> IO [LExp]
+normAll expr eval
+  | null (redex expr) = return [expr]
+  | otherwise = do
+    next <- stepBeta expr eval
+    rest <- normAll next eval
+    return $ expr : rest
