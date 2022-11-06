@@ -49,7 +49,7 @@ repl = go [] (False, "norm") -- start the interpreter in an empty environment
       putStr "> " -- print the prompt
       hFlush stdout -- flush standard output
       line <- getLine -- get a line of input
-      let cmd = read line -- parse the input as a command
+      cmd <- readParser parseCmd line -- parse the input as a command
       case cmd of
         Eval t ->
           -- execute an eval command
@@ -81,8 +81,8 @@ repl = go [] (False, "norm") -- start the interpreter in an empty environment
           return ()
         Set set -> do
           let action
-                | set == "stepson" = go env (True, snd flags)
-                | set == "stepsoff" = go env (False, snd flags)
+                | set == "stepon" = go env (True, snd flags)
+                | set == "stepoff" = go env (False, snd flags)
                 | set == "normal" = go env (fst flags, "norm")
                 | set == "applicative" = go env (fst flags, "appl")
                 | set == "random" = go env (fst flags, "rand")

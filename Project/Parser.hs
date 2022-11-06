@@ -165,7 +165,7 @@ parseLExp = parseLam <|> parseApps
 -- Parse a lambda abstraction expression.
 parseLam :: Parser LExp
 parseLam = do
-  --char '\\' <|> char 'λ'        -- parse backslash or unicode λ for the lambda symbol
+  char '\\' <|> char 'λ'        -- parse backslash or unicode λ for the lambda symbol
   x <- var -- parse a variable name
   char '.' -- parse a dot
   t <- parseLExp -- parse an expression
