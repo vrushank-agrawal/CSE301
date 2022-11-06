@@ -1,13 +1,14 @@
-Let "zero" (L"f" (L"x" (V"x")))
-Let "succ" (L "n" (L "f" (L "x" (A (V"f") (A (A (V"n") (V"f")) (V"x"))))))
-Let "one" (A (V"succ") (V"zero"))
-Let "add" (L "m" (L "n" (A (A (V"m") (V"succ")) (V"n"))))
-Let "mul" (L "m" (L "n" (A (A (V"m") (A (V"add") (V"n"))) (V"zero"))))
-Let "exp" (L "m" (L "n" (A (A (V"n") (A (V"mul") (V"m"))) (V"one"))))
-Let "two" (A (V"succ") (V"one"))
-Let "three" (A (V"succ") (V"two"))
-Let "four" (A (V"succ") (V"three"))
-Let "five" (A (V"succ") (V"four"))
-Eval (A (A (V"add") (V"four")) (V"five"))
-Eval (A (A (V"mul") (V"four")) (V"five"))
-Eval (A (A (V"exp") (V"four")) (V"five"))
+zero = \f.\x.x
+one = \f.\x.f x
+succ = \n.\f.\x.f (n f x)
+two = suc one
+two = succ one
+two
+three = succ two
+add = \m.\n.m succ n
+mul = \m.\n.m (add n) zero
+exp = \m.\n.n (mul m) one
+add two three
+mul two three
+exp two three
+:quit
