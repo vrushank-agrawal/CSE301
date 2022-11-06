@@ -1,4 +1,4 @@
-module Parser (runParser, parseLExp, parseCmd) where
+module Parser where
 
 import Cmd
 import Control.Applicative
@@ -188,7 +188,7 @@ parseVar = var >>= \x -> return (V x)
 
 -- Parse a command.
 parseCmd :: Parser Cmd
-parseCmd = parseEval <|> parseLet <|> parseNoop <|> parseQuit <|> parseLoad
+parseCmd = parseEval <|> parseLet <|> parseNoop <|> parseQuit <|> parseLoad <|> parseSet
 
 -- Parse an eval command.
 parseEval :: Parser Cmd
@@ -234,8 +234,17 @@ parseLoad = do
 
 filename :: Parser String
 filename = do
-  name <- list (char '\'')
+  name <- list (alphanum <|> char '.')
   return name
+
+-- Parse a set command
+parseSet :: Parser Cmd
+parseSet = do
+  string ":set" <|> string ":s"
+  spaces
+  name <- filename
+  end
+  return (Set name)
 
 readParser :: MonadFail m => Parser a -> String -> m a
 readParser p s = case runParser p s of
