@@ -2,14 +2,12 @@ module Eval (normalize, normAll) where
 
 import Expr
 import Subst
-import System.IO
-import System.Random (getStdRandom, newStdGen, random, randomR, randomRs)
+import System.Random (getStdRandom, randomR)
 
 -- datatype of one-hole contexts for lambda expressions
 data LExpCxt = Hole | A'1 LExpCxt LExp | A'2 LExp LExpCxt | L' Var LExpCxt
   deriving (Show, Eq)
 
-test1 = (L "x" (A (V "x") (V "y")))
 -- we represent contexts "inside-out", i.e., with the parts of the
 -- context nearest to the hole at the top-level.
 -- The plugging function is defined accordingly.
@@ -37,41 +35,50 @@ subexp t = focus t Hole
     focus (L x e) c = (c, L x e) : focus e (L' x c)
 
 redex :: LExp -> [LExpPtr]
-redex expr = filter isRedex (subexp expr)
+redex expr = filter isRedex (subexp expr) -- filter by expressions that can be reduced
   where
     isRedex :: LExpPtr -> Bool
+    -- Only expressions that are applications of some other expressions
+    -- into a lambda expression can be reduced
     isRedex (_, A (L _ _) _) = True
     isRedex _ = False
 
 stepBeta :: LExp -> String -> IO LExp
 stepBeta expr eval = do
+  -- select the evaluation strategy
   leftmost <- picker redices eval
   case leftmost of
     (ctx, e) -> case e of
+      -- Do substitution and plug the expression into the original context
       A (L x y) d -> return $ plug ctx (subst (d, x) y)
   where
+    -- expressions that can be reduced
     redices = redex expr
 
 picker :: [LExpPtr] -> String -> IO LExpPtr
 picker redices s
+  -- use a flag to select the evaluation strategy
   | s == "norm" = return (head redices)
   | s == "appl" = return (last redices)
   | s == "rand" = do
-        x <- getStdRandom $ randomR (0, length redices - 1)
-        return (redices !! x)
+    -- return a random element from the list
+    x <- getStdRandom $ randomR (0, length redices - 1)
+    return (redices !! x)
 
 normalize :: LExp -> String -> IO [LExp]
 normalize expr eval
+  -- if there are no redices just return the expression
   | null (redex expr) = return [expr]
+  -- otherwise reduce, and normalize the result
   | otherwise = do
-        next <- stepBeta expr eval
-        rest <- normalize next eval
-        return rest
+    next <- stepBeta expr eval
+    rest <- normalize next eval
+    return rest
 
 normAll :: LExp -> String -> IO [LExp]
 normAll expr eval
   | null (redex expr) = return [expr]
   | otherwise = do
-        next <- stepBeta expr eval
-        rest <- normAll next eval
-        return $ expr : rest
+    next <- stepBeta expr eval
+    rest <- normAll next eval
+    return $ expr : rest

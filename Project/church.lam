@@ -11,4 +11,17 @@ exp = \m.\n.n (mul m) one
 add two three
 mul two three
 exp two three
+:s stepon
+add two two
+:s applicative
+add two two
+:s stepoff
+:s random
+add two two
+:s normal
+exp three three
+:s haskell
+mul three three
+:s original
+add one three
 :quit
