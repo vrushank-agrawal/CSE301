@@ -1,0 +1,14 @@
+zero = \f.\x.x
+one = \f.\x.f x
+succ = \n.\f.\x.f (n f x)
+two = suc one
+two = succ one
+two
+three = succ two
+add = \m.\n.m succ n
+mul = \m.\n.m (add n) zero
+exp = \m.\n.n (mul m) one
+add two three
+mul two three
+exp two three
+:quit

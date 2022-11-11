@@ -1,0 +1,51 @@
+name: Project
+version: 0.1.0.0
+github: "Github username here/Project"
+license: BSD3
+author: "Author name here"
+maintainer: "Author email here"
+copyright: "2019 Author name here"
+
+extra-source-files:
+  - README.md
+  - CHANGELOG.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            App category here
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description: Please see the README on GitHub at <https://github.com/Github username here/Project#readme>
+
+dependencies:
+  - base >= 4.7 && < 5
+  - haskeline
+  - random
+  - mtl
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wmissing-export-lists
+  - -Wmissing-home-modules
+  - -Wpartial-fields
+  - -Wredundant-constraints
+
+library:
+  source-dirs: src
+
+executables:
+  Project-exe:
+    main: MyLambda.hs
+    source-dirs: Project
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - Project
